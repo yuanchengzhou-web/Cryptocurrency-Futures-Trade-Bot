@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 import talib
@@ -8,10 +9,9 @@ from binance.enums import *
 from binance.client import Client
 from IPython.display import clear_output, display
 
-### Connects to Binance 
-client=Client(api_key = "YOUR API KEY" ,
-              api_secret = "YOUR SCECRET KEY")
 
+client=Client(api_key = "YOUR API KEY" ,
+              api_secret = "YOUR SECRET KEY")
 
 ### The function of SAR technical indicator
 def sar(acceleration, maximum):   
@@ -97,8 +97,7 @@ def boll(boll_length, boll_multipler, boll_ret):
     elif boll_ret == "lower":
         return lower
 
-
-### The function to extract futures candlestick data from binance and to create down & up lists for profit sell and stop loss limits
+### The function to extract the candlestick data for trade signal calculation
 def kline_data_extract(usdt_symbol, kdj_length, k, d, boll_length, boll_multipler, acceleration, maximum, get_data):
     
     dict_setup = {"time":[],"open":[], "high":[], "low":[], "close":[]}
@@ -154,14 +153,14 @@ def kline_data_extract(usdt_symbol, kdj_length, k, d, boll_length, boll_multiple
     up_l = []
     
     
-    for i in range(5,len(had)): 
+    for i in range(5,len(had)): ### Start after 20 indices have passed and every technical indictors have the values.
         a = 60-i   
         ### Starts storing kline, technical values into down_l list where it only stores candles that is negative and has
         ### lower closing price than the previous candle in down_l consecutively.
         ### This starts the backtest where since trade type is "N/A" so no trade has happened yet, so starts storing data
         ### for technical indicators signals
         if had.iloc[a,0] > had.iloc[a,3] and len(down_l)== 0 and len(up_l) == 0 and had.iloc[a,10] >= had.iloc[a,1]:
-            down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
+            down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],                          had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
         
         elif had.iloc[a,0] < had.iloc[a,3] and len(down_l)== 0 and len(up_l) == 0 and had.iloc[a,2] >= had.iloc[a,10]:
             up_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,7],had.iloc[a,8],
@@ -172,18 +171,18 @@ def kline_data_extract(usdt_symbol, kdj_length, k, d, boll_length, boll_multiple
         ### whether it is time to buy in, such as buy the dip
         if had.iloc[a,0] > had.iloc[a,3] and len(down_l) == 0 and len(up_l) != 0 and had.iloc[a,10] >= had.iloc[a,1]:
             up_l = []
-            down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
+            down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],                          had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
 
         ### This part will continue to store negative candles after the backtest started to simulate trade.
         elif had.iloc[a,0] > had.iloc[a,3] and len(down_l) != 0 and len(up_l) == 0 and had.iloc[a,10] >= had.iloc[a,1]:
             if had.iloc[a,3] < down_l[-1][3]:
-                down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
+                down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],                              had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
         
         elif had.iloc[a,0] > had.iloc[a,3] and len(down_l) != 0 and len(up_l) != 0 and had.iloc[a,10] >= had.iloc[a,1]:
             up_l = []
             down_l = []
             
-            down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
+            down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],                            had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
         
         if had.iloc[a,0] < had.iloc[a,3] and len(up_l) == 0 and had.iloc[a,2] >= had.iloc[a,10]:
             up_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,7],had.iloc[a,8],
@@ -255,14 +254,12 @@ def kline_data_extract(usdt_symbol, kdj_length, k, d, boll_length, boll_multiple
         else:
             return 'N/A'
 
-
-### The trade bot function that will use all the functions above for trade signal
+### The trade bot function with trade conditions
 def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maximum,
               usdt_symbol,buy_qty_pct = 0.7,profit1=1.5, profit2=2.0, profit3=2.8, profit4=3.8, 
               stop_loss_force=0.015, stop_loss_pct=1.5, final_stop_loss=0.07,leverage_level=1):
     
-    sos = {'Symbol':[], 'Total Realized Gain/Loss %':[], 'Average Realized Gain/Loss %':[], 
-           'Positive Liquidation Average % Gain':[], 'Negative Liquidation Average % Loss':[], 'Positive Liquidation Probability':[]}
+    sos = {'Symbol':[], 'Total Realized Gain/Loss %':[], 'Average Realized Gain/Loss %':[],            'Positive Liquidation Average % Gain':[], 'Negative Liquidation Average % Loss':[], 'Positive Liquidation Probability':[]}
     
     pd.set_option("display.max_rows", None, "display.max_columns", None)
     client.futures_change_leverage(symbol = usdt_symbol, leverage = leverage_level)
@@ -272,11 +269,19 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
     refresh_data = 0
     initial_refresh = 1
     
+    info = client.futures_exchange_info()
+    for i in range(len(info['symbols'])):
+        if info['symbols'][i]['symbol'] == usdt_symbol:
+            index_ = i
+            break
+    price_precision = info['symbols'][index_]['pricePrecision']
+    
     last_trade_type = 'Sell'
     remaining_qty = 0
     buy_ID = 0
     buy_lock = 0
     buy_price = 0
+    buy_quantity = 0
     profit_sell_qty_4 = 0
     profit_sell_qty_3 = 0
     profit_sell_qty_2 = 0
@@ -294,8 +299,6 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
                                         acceleration = acceleration, maximum = maximum, get_data = "df")
         
         market_price = float(client.futures_mark_price(symbol=usdt_symbol)['markPrice'])
-        
-        buy_quantity = round((begin_balance*buy_qty_pct)/candles_30.iloc[0][3],0)
         
         time_left = current_time_datetime - datetime.strptime(candles_30.index[1], "%Y/%m/%d, %H:%M")
         
@@ -352,11 +355,11 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
         ### If buy in, this part will create an up_l list storing the positive candles higher than the previous one 
         ### consecutively for profit sell conditions.
         ### This part will also create trade data in had_calc_df dataframe for gain/loss calculation.
-        if len(down_l) != 0 and candles_30.iloc[0,0] < candles_30.iloc[0,3] and buy_lock == 0 and candles_30.iloc[0,2] >= candles_30.iloc[0,10] and \
-        ((candles_30.iloc[0,4] > candles_30.iloc[0,5] and time_left_minute < 14) or (candles_30.iloc[0,3] - candles_30.iloc[0,0])/candles_30.iloc[0,0] > avg_thcp*1.5) and \
-        last_trade_type == 'Sell':
+        if len(down_l) != 0 and candles_30.iloc[0,0] < candles_30.iloc[0,3] and buy_lock == 0 and         candles_30.iloc[0,2] >= candles_30.iloc[0,10] and         ((candles_30.iloc[0,4] > candles_30.iloc[0,5] and time_left_minute < 14) or         (candles_30.iloc[0,3] - candles_30.iloc[0,0])/candles_30.iloc[0,0] > avg_thcp*1.5) and         last_trade_type == 'Sell':
 
             if below_boll_mid == 1 or below_boll_upper == 1 or below_boll_lower == 1:
+                
+                buy_quantity = round((begin_balance*buy_qty_pct)/candles_30.iloc[0][3],0)
                 
                 long = client.futures_create_order(
                             symbol=usdt_symbol,
@@ -383,18 +386,17 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
 
             ### this part will setup values to secure profit when the current closing price have reached 
             ### specified limits
-            if candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and (market_price - buy_price)/buy_price >= avg_thcp*profit4:
+            if candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and             (market_price - buy_price)/buy_price >= avg_thcp*profit4:
                 
-                sell_price = buy_price + buy_price*avg_thcp*profit4
+                sell_price = round(buy_price + buy_price*avg_thcp*profit4, price_precision)
+                
                 profit_sell_qty_4 = buy_quantity -  profit_sell_qty_1 - profit_sell_qty_2 - profit_sell_qty_3
                 
                 client.futures_create_order(
                     symbol = usdt_symbol,
                     side=SIDE_SELL,
-                    price = sell_price,
                     positionSide='LONG',
-                    type=ORDER_TYPE_LIMIT,
-                    timeInFORCE = 'GTC',
+                    type=ORDER_TYPE_MARKET,
                     quantity=profit_sell_qty_4)
                 
                 new_balance = float(client.futures_account_balance()[1]['balance'])
@@ -403,59 +405,57 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
                     
                 remaining_qty = 0
                 last_trade_type = 'Sell'
+                buy_quantity = 0
                 profit_sell_qty_4 = 0
                 profit_sell_qty_3 = 0
                 profit_sell_qty_2 = 0
                 profit_sell_qty_1 = 0
                 buy_lock = 1
 
-            elif candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and (market_price - buy_price)/buy_price >= avg_thcp*profit3:
+            elif candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and             (market_price - buy_price)/buy_price >= avg_thcp*profit3:
                 
-                sell_price = buy_price + buy_price*avg_thcp*profit3
+                sell_price = round(buy_price + buy_price*avg_thcp*profit3, price_precision)
+                
                 if profit_sell_qty_1 == 0 and profit_sell_qty_2 == 0:
                     profit_sell_qty_3 = round(buy_quantity*0.75,0)
                 
                 elif profit_sell_qty_1 != 0 and profit_sell_qty_2 == 0:
-                    profit_sell_qty_3 = buy_quantity - profit_sell_qty_1 - round(buy_quantity/2,0)
+                    profit_sell_qty_3 = round(buy_quantity/2,0)
                 
                 elif profit_sell_qty_1 == 0 and profit_sell_qty_2 != 0:
-                    profit_sell_qty_3 = buy_quantity - profit_sell_qty_2 - round(buy_quantity/4,0)
+                    profit_sell_qty_3 = profit_sell_qty_2 + round(buy_quantity/4,0)
                     
                 elif profit_sell_qty_1 != 0 and profit_sell_qty_2 != 0:
-                    profit_sell_qty_3 = buy_quantity - profit_sell_qty_1 - profit_sell_qty_2
+                    profit_sell_qty_3 = round(buy_quantity/4,0)
                 
-                    client.futures_create_order(
-                        symbol = usdt_symbol,
-                        side=SIDE_SELL,
-                        price = sell_price,
-                        positionSide='LONG',
-                        type=ORDER_TYPE_LIMIT,
-                        timeInFORCE = 'GTC',
-                        quantity=profit_sell_qty_3)
+                client.futures_create_order(
+                    symbol = usdt_symbol,
+                    side=SIDE_SELL,
+                    positionSide='LONG',
+                    type=ORDER_TYPE_MARKET,
+                    quantity=profit_sell_qty_3)
                 
                 new_balance = float(client.futures_account_balance()[1]['balance'])
                 if new_balance > begin_balance:
                     begin_balance = new_balance
                     
                 last_trade_type = "Profit Sell"
-                remaining_qty = buy_quantity - profit_sell_qty_3
+                remaining_qty = remaining_qty - profit_sell_qty_3
+
+            elif candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and             (market_price - buy_price)/buy_price >= avg_thcp*profit2:
                 
-            elif candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and (market_price - buy_price)/buy_price >= avg_thcp*profit2:
-                
-                sell_price = buy_price + buy_price*avg_thcp*profit2
+                sell_price = round(buy_price + buy_price*avg_thcp*profit2,price_precision)
                 if profit_sell_qty_1 == 0:
-                    profit_sell_qty_2 = buy_quantity - round(buy_quantity/2,0)
+                    profit_sell_qty_2 = round(buy_quantity/2,0)
                 
                 elif profit_sell_qty_1 != 0:
-                    profit_sell_qty_2 = buy_quantity - profit_sell_qty_1 - round(buy_quantity/4,0)
-                
+                    profit_sell_qty_2 = profit_sell_qty_1 + round(buy_quantity/4,0)
+
                 client.futures_create_order(
                     symbol = usdt_symbol,
                     side=SIDE_SELL,
-                    price = sell_price,
                     positionSide='LONG',
-                    type=ORDER_TYPE_LIMIT,
-                    timeInFORCE = 'GTC',
+                    type=ORDER_TYPE_MARKET,
                     quantity=profit_sell_qty_2)
                 
                 new_balance = float(client.futures_account_balance()[1]['balance'])
@@ -463,20 +463,17 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
                     begin_balance = new_balance
                     
                 last_trade_type = "Profit Sell"
-                remaining_qty = buy_quantity - profit_sell_qty_2
+                remaining_qty = remaining_qty - profit_sell_qty_2
                 
-            elif candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and (market_price - buy_price)/buy_price >= avg_thcp*profit1:
+            elif candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and             (market_price - buy_price)/buy_price >= avg_thcp*profit1:
                 
-                sell_price = buy_price + buy_price*avg_thcp*profit1
-                profit_sell_qty_1 = buy_quantity - round(buy_quantity/4,0)
+                profit_sell_qty_1 = round(buy_quantity/4,0)
                 
                 client.futures_create_order(
                     symbol = usdt_symbol,
                     side=SIDE_SELL,
-                    price = sell_price,
                     positionSide='LONG',
-                    type=ORDER_TYPE_LIMIT,
-                    timeInFORCE = 'GTC',
+                    type=ORDER_TYPE_MARKET,
                     quantity=profit_sell_qty_1)
                 
                 new_balance = float(client.futures_account_balance()[1]['balance'])
@@ -484,14 +481,12 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
                     begin_balance = new_balance
                     
                 last_trade_type = "Profit Sell"
-                remaining_qty = buy_quantity - profit_sell_qty_1
+                remaining_qty = remaining_qty - profit_sell_qty_1
 
             ### this part is the loss reduction
             ### it calculates and compares the price drop % to average amplitude % of pass 20 candles 
             ### if the price dropping too low, it will trigger the condition and sell immediately
-            if ((candles_30.iloc[0,2] >= candles_30.iloc[0,10] and up_l[-1][3] > market_price and (up_l[-1][3] - market_price)/up_l[-1][3] > avg_thcp*stop_loss_pct) or \
-                candles_30.iloc[0,10] >= candles_30.iloc[0,1] or (candles_30.iloc[0,2] >= candles_30.iloc[0,10] and up_l[-1][3] > market_price and \
-                (up_l[-1][3] - market_price)/up_l[-1][3] > stop_loss_force)) and last_trade_type != 'Sell':
+            if last_trade_type != 'Sell' and                ((candles_30.iloc[0,2] >= candles_30.iloc[0,10] and up_l[-1][3] > market_price and                (up_l[-1][3] - market_price)/up_l[-1][3] > avg_thcp*stop_loss_pct) or                 candles_30.iloc[0,10] >= candles_30.iloc[0,1] or                (candles_30.iloc[0,2] >= candles_30.iloc[0,10] and up_l[-1][3] > market_price and                (up_l[-1][3] - market_price)/up_l[-1][3] > stop_loss_force)):
                     
                 final_quantity = remaining_qty
 
@@ -501,7 +496,12 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
                     positionSide='LONG',
                     type=ORDER_TYPE_MARKET,
                     quantity=final_quantity)
-
+                
+                profit_sell_qty_4 = 0
+                profit_sell_qty_3 = 0
+                profit_sell_qty_2 = 0
+                profit_sell_qty_1 = 0
+                buy_quantity = 0
                 buy_lock = 1
                 last_trade_type = "Sell"
                 new_balance = float(client.futures_account_balance()[1]['balance'])
@@ -513,11 +513,12 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
                     print("THE % OF LOSS HAS REACHED",final_stop_loss*100,"% of the Total Futures Balance!")
                     print("THE TRADE BOT IS NOW TERMINATED!")
         
-        time.sleep(1)  ### Refreshes every second
+        time.sleep(1)  
 
-### Execute the trade bot to start trading with various settings!
-trade_bot(kdj_length = 3, k = 9, d = 3, boll_length = 20, boll_multipler = 2, acceleration = 0.02, maximum = 0.2,
-              usdt_symbol = "DOGEUSDT",buy_qty_pct = 0.7,profit1=1.5, profit2=2.0, profit3=2.5, profit4=3.0, 
+
+### Execute the trade bot
+trade_bot(kdj_length = 3, k = 9, d = 3, boll_length = 20, boll_multipler = 2, acceleration = 0.05, maximum = 0.2,
+              usdt_symbol = "DOGEUSDT",buy_qty_pct = 0.7,profit1=2.0, profit2=3.0, profit3=4.0, profit4=5.0, 
               stop_loss_force=0.015, stop_loss_pct=1.5, final_stop_loss=0.05,leverage_level=1)
 
 
