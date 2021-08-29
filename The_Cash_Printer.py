@@ -160,7 +160,7 @@ def kline_data_extract(usdt_symbol, kdj_length, k, d, boll_length, boll_multiple
         ### This starts the backtest where since trade type is "N/A" so no trade has happened yet, so starts storing data
         ### for technical indicators signals
         if had.iloc[a,0] > had.iloc[a,3] and len(down_l)== 0 and len(up_l) == 0 and had.iloc[a,10] >= had.iloc[a,1]:
-            down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],                          had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
+            down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
         
         elif had.iloc[a,0] < had.iloc[a,3] and len(down_l)== 0 and len(up_l) == 0 and had.iloc[a,2] >= had.iloc[a,10]:
             up_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,7],had.iloc[a,8],
@@ -171,18 +171,18 @@ def kline_data_extract(usdt_symbol, kdj_length, k, d, boll_length, boll_multiple
         ### whether it is time to buy in, such as buy the dip
         if had.iloc[a,0] > had.iloc[a,3] and len(down_l) == 0 and len(up_l) != 0 and had.iloc[a,10] >= had.iloc[a,1]:
             up_l = []
-            down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],                          had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
+            down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
 
         ### This part will continue to store negative candles after the backtest started to simulate trade.
         elif had.iloc[a,0] > had.iloc[a,3] and len(down_l) != 0 and len(up_l) == 0 and had.iloc[a,10] >= had.iloc[a,1]:
             if had.iloc[a,3] < down_l[-1][3]:
-                down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],                              had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
+                down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
         
         elif had.iloc[a,0] > had.iloc[a,3] and len(down_l) != 0 and len(up_l) != 0 and had.iloc[a,10] >= had.iloc[a,1]:
             up_l = []
             down_l = []
             
-            down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],                            had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
+            down_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,4],had.iloc[a,5],had.iloc[a,6],had.iloc[a,7],had.iloc[a,8],had.iloc[a,9]])
         
         if had.iloc[a,0] < had.iloc[a,3] and len(up_l) == 0 and had.iloc[a,2] >= had.iloc[a,10]:
             up_l.append([had.iloc[a,0],had.iloc[a,1],had.iloc[a,2],had.iloc[a,3],had.iloc[a,7],had.iloc[a,8],
@@ -259,7 +259,8 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
               usdt_symbol,buy_qty_pct = 0.7,profit1=1.5, profit2=2.0, profit3=2.8, profit4=3.8, 
               stop_loss_force=0.015, stop_loss_pct=1.5, final_stop_loss=0.07,leverage_level=1):
     
-    sos = {'Symbol':[], 'Total Realized Gain/Loss %':[], 'Average Realized Gain/Loss %':[],            'Positive Liquidation Average % Gain':[], 'Negative Liquidation Average % Loss':[], 'Positive Liquidation Probability':[]}
+    sos = {'Symbol':[], 'Total Realized Gain/Loss %':[], 'Average Realized Gain/Loss %':[],'Positive Liquidation Average % Gain':[],
+          'Negative Liquidation Average % Loss':[], 'Positive Liquidation Probability':[]}
     
     pd.set_option("display.max_rows", None, "display.max_columns", None)
     client.futures_change_leverage(symbol = usdt_symbol, leverage = leverage_level)
@@ -355,7 +356,9 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
         ### If buy in, this part will create an up_l list storing the positive candles higher than the previous one 
         ### consecutively for profit sell conditions.
         ### This part will also create trade data in had_calc_df dataframe for gain/loss calculation.
-        if len(down_l) != 0 and candles_30.iloc[0,0] < candles_30.iloc[0,3] and buy_lock == 0 and         candles_30.iloc[0,2] >= candles_30.iloc[0,10] and         ((candles_30.iloc[0,4] > candles_30.iloc[0,5] and time_left_minute < 14) or         (candles_30.iloc[0,3] - candles_30.iloc[0,0])/candles_30.iloc[0,0] > avg_thcp*1.5) and         last_trade_type == 'Sell':
+        if len(down_l) != 0 and candles_30.iloc[0,0] < candles_30.iloc[0,3] and buy_lock == 0 and candles_30.iloc[0,2] >= candles_30.iloc[0,10] and \
+            ((candles_30.iloc[0,4] > candles_30.iloc[0,5] and time_left_minute < 14) or (candles_30.iloc[0,3] - candles_30.iloc[0,0])/candles_30.iloc[0,0] > avg_thcp*1.5) and \
+            last_trade_type == 'Sell':
 
             if below_boll_mid == 1 or below_boll_upper == 1 or below_boll_lower == 1:
                 
@@ -386,7 +389,7 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
 
             ### this part will setup values to secure profit when the current closing price have reached 
             ### specified limits
-            if candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and             (market_price - buy_price)/buy_price >= avg_thcp*profit4:
+            if candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and (market_price - buy_price)/buy_price >= avg_thcp*profit4:
                 
                 sell_price = round(buy_price + buy_price*avg_thcp*profit4, price_precision)
                 
@@ -412,7 +415,7 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
                 profit_sell_qty_1 = 0
                 buy_lock = 1
 
-            elif candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and             (market_price - buy_price)/buy_price >= avg_thcp*profit3:
+            elif candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and (market_price - buy_price)/buy_price >= avg_thcp*profit3:
                 
                 sell_price = round(buy_price + buy_price*avg_thcp*profit3, price_precision)
                 
@@ -442,7 +445,7 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
                 last_trade_type = "Profit Sell"
                 remaining_qty = remaining_qty - profit_sell_qty_3
 
-            elif candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and             (market_price - buy_price)/buy_price >= avg_thcp*profit2:
+            elif candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and (market_price - buy_price)/buy_price >= avg_thcp*profit2:
                 
                 sell_price = round(buy_price + buy_price*avg_thcp*profit2,price_precision)
                 if profit_sell_qty_1 == 0:
@@ -465,7 +468,7 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
                 last_trade_type = "Profit Sell"
                 remaining_qty = remaining_qty - profit_sell_qty_2
                 
-            elif candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and             (market_price - buy_price)/buy_price >= avg_thcp*profit1:
+            elif candles_30.iloc[0,2] >= candles_30.iloc[0,10] and market_price > buy_price and (market_price - buy_price)/buy_price >= avg_thcp*profit1:
                 
                 profit_sell_qty_1 = round(buy_quantity/4,0)
                 
@@ -486,7 +489,9 @@ def trade_bot(kdj_length, k, d, boll_length, boll_multipler, acceleration, maxim
             ### this part is the loss reduction
             ### it calculates and compares the price drop % to average amplitude % of pass 20 candles 
             ### if the price dropping too low, it will trigger the condition and sell immediately
-            if last_trade_type != 'Sell' and                ((candles_30.iloc[0,2] >= candles_30.iloc[0,10] and up_l[-1][3] > market_price and                (up_l[-1][3] - market_price)/up_l[-1][3] > avg_thcp*stop_loss_pct) or                 candles_30.iloc[0,10] >= candles_30.iloc[0,1] or                (candles_30.iloc[0,2] >= candles_30.iloc[0,10] and up_l[-1][3] > market_price and                (up_l[-1][3] - market_price)/up_l[-1][3] > stop_loss_force)):
+            if last_trade_type != 'Sell' and ((candles_30.iloc[0,2] >= candles_30.iloc[0,10] and up_l[-1][3] > market_price and \
+                (up_l[-1][3] - market_price)/up_l[-1][3] > avg_thcp*stop_loss_pct) or candles_30.iloc[0,10] >= candles_30.iloc[0,1] or \
+                (candles_30.iloc[0,2] >= candles_30.iloc[0,10] and up_l[-1][3] > market_price and (up_l[-1][3] - market_price)/up_l[-1][3] > stop_loss_force)):
                     
                 final_quantity = remaining_qty
 
